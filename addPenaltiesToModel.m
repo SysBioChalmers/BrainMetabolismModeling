@@ -1,13 +1,36 @@
-function model = addPenaltiesToModel(model, B, T, UCyto, UMito, dontPenalize)
-%dontPenalize means that we add reactions to consume protein pool, but no cost
-%B is the maintenance cost per protein unit with no transport or utilization penalties
+function model = addPenaltiesToModel(model, B, TM, TG, UCyto, UMito, dontPenalize)
+% addPenaltiesToModel
+%
+% Adds EAMCA maintenance costs to the model
+%
+% Input:
+%
+%   model           The model to modify
+%
+%   B               Base cost - maintenance cost per protein unit without transportation or utilization penalties
+%
+%   TM              Transportation penalty, mitochondria - typically a number between 0 and 2, such as 0.10
+%
+%   TG              Transportation penalty, glycolysis - typically a number between 0 and 2, such as 0.10
+%
+%   UCyto           Utilization of cytosolic proteins, such as glycolysis
+%
+%   UMito           Utilization of mitochondrial proteins, such as mitochondrial respiration
+%
+%   dontPenalize    If true, we add reactions to consume protein pool, but at no cost. Default: false
+%
+% Output:
+%
+%   outModel        The penalized model
+%
 
-if nargin < 6
+
+if nargin < 7
     dontPenalize = false;
 end
-costOther = B*T/UCyto;
-costCyto = B*T/UCyto;
-costMito = B*T/UMito;
+costOther = B*TG/UCyto;
+costCyto = B*TG/UCyto;
+costMito = B*TM/UMito;
 costMT = B/UMito;
 
 rxnsToAdd = {};

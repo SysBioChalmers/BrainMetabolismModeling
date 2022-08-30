@@ -21,6 +21,7 @@ outModel.rxnGeneMat = [inModel1.rxnGeneMat;inModel2.rxnGeneMat];%so, we assume t
 zeroMat1 = zeros(length(inModel1.mets), length(inModel2.rxns));
 zeroMat2 = zeros(length(inModel2.mets), length(inModel1.rxns));
 outModel.S = [inModel1.S zeroMat1;zeroMat2 inModel2.S];
+outModel.rev = [inModel1.rev;inModel2.rev];
 
 %we skip some new fields that I don't recognize...
     

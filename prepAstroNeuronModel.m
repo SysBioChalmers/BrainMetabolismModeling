@@ -56,7 +56,7 @@ load('data/ecModel.mat')
 
 
 %open up the flux for protein usage, but don't penalize it
-modUnpen = addPenaltiesToModel(ecModel, 1, 1, 1, 1, true);
+modUnpen = addPenaltiesToModel(ecModel, 1, 1, 1, 1, 1, true);
 
 
 %now feed the model with some basics + glucose, no oxygen:
@@ -96,7 +96,7 @@ table(modUnpen.rxns(selGlyc), res.x(selGlyc), constructEquations(modUnpen, modUn
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %open up the flux for protein usage, but don't penalize it
-modUnpen = addPenaltiesToModel(ecModel, 1, 1, 1, 1, true);
+modUnpen = addPenaltiesToModel(ecModel, 1, 1, 1, 1, 1, true);
 
 rxnsToKeepOpen = {'MAR09047_REV'; ... %H2O
               'MAR09072_REV'; ... %Pi
@@ -135,7 +135,7 @@ table(modUnpen.rxns(selBoth), res.x(selBoth))
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %open up the flux for protein usage, but don't penalize it
-modUnpen = addPenaltiesToModel(ecModel, 1, 1, 1, 1, true);
+modUnpen = addPenaltiesToModel(ecModel, 1, 1, 1, 1, 1, true);
 
 rxnsToKeepOpen = {'MAR09047_REV'; ... %H2O
               'MAR09072_REV'; ... %Pi
@@ -195,7 +195,7 @@ save('data/MinModel.mat', 'minModel');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-modUnpen = addPenaltiesToModel(minModel, 1, 1, 1, 1, true);
+modUnpen = addPenaltiesToModel(minModel, 1, 1, 1, 1, 1, true);
 
 %now feed the model with some basics + glucose, no oxygen:
 

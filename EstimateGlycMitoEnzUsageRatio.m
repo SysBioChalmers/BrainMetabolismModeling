@@ -6,7 +6,7 @@ ecModel = load('data/ecModel.mat').ecModel;
 
 
 %open up the flux for protein usage, but don't penalize it
-modUnpen = addPenaltiesToModel(ecModel, 1, 1, 1, 1, true);
+modUnpen = addPenaltiesToModel(ecModel, 1, 1, 1, 1, 1, true);
 
 
 %now feed the model with some basics + glucose, no oxygen:
@@ -50,7 +50,7 @@ fluxesGlyc = res.x;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %open up the flux for protein usage, but don't penalize it
-modUnpen = addPenaltiesToModel(ecModel, 1, 1, 1, 1, true);
+modUnpen = addPenaltiesToModel(ecModel, 1, 1, 1, 1, 1, true);
 
 rxnsToKeepOpen = {'MAR09047_REV'; ... %H2O
               'MAR09072_REV'; ... %Pi

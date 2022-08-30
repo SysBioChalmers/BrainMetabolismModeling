@@ -1,6 +1,14 @@
 cd 'C:/Work/MatlabCode/projects/BrainMetabolismModeling/BrainMetabolismModeling'
 load('data/MinModel.mat')
 
+%Data for Fig. 2F:
+simulateFullModel(minModel, 'data/FullModelOutput.mat', 0.17, 0.03, 0.1, 0.1, 0.1, 0.1, 0.4, 0.2);
+
+%Data for Fig. S2:
+simulateFullModel(minModel, 'data/FullModelOutputTransport.mat', 0.17, 0.03, 0.075, 0.1, 0.1, 0.1, 0.4, 0.4);
+
+
+%{
 %some temp test code:
 %
 %ihuman = load('C:/Work/MatlabCode/components/human-GEM/Human-GEM/model/Human-GEM.mat').ihuman;
@@ -57,7 +65,7 @@ fracN = 0.02;
 fracA = 0.005;
 
 %rest of the body, rob:
-robModel = addPenaltiesToModel(neuronModelTempl, B, 1, 1, 1);
+robModel = addPenaltiesToModel(neuronModelTempl, B, 1, 1, 1, 1);
 
 
 %Loop through the different static utilization points and check if the 
@@ -68,8 +76,8 @@ astroLactateImport = nan(length(UCytos),1);
 results = cell(length(UCytos),0);
 for i = 1:length(UCytos)
     disp(i)
-    neuronModel = addPenaltiesToModel(neuronModelTempl, B, TNeuron, UCytos(i), UNeuronMito);
-    astroModel = addPenaltiesToModel(neuronModelTempl, B, TAstro, UCytos(i), UAstroMito);
+    neuronModel = addPenaltiesToModel(neuronModelTempl, B, TNeuron, TNeuron, UCytos(i), UNeuronMito);
+    astroModel = addPenaltiesToModel(neuronModelTempl, B, TAstro, TAstro, UCytos(i), UAstroMito);
 
     combModel = buildFullBrainModel(robModel,neuronModel, astroModel, fracN, fracA);
     %constructEquations(combModel, 'tot_ATP_hydr')%looks good
@@ -103,8 +111,8 @@ astroLactateImport
 %this take a few minutes to run
 for i = 1:1
     disp(i)
-    neuronModel = addPenaltiesToModel(neuronModelTempl, B, TNeuron, UCytos(i), UNeuronMito);
-    astroModel = addPenaltiesToModel(neuronModelTempl, B, TAstro, UCytos(i), UAstroMito);
+    neuronModel = addPenaltiesToModel(neuronModelTempl, B, TNeuron, TNeuron, UCytos(i), UNeuronMito);
+    astroModel = addPenaltiesToModel(neuronModelTempl, B, TAstro, TAstro, UCytos(i), UAstroMito);
 
     combModel = buildFullBrainModel(robModel,neuronModel, astroModel, fracN, fracA);
     %constructEquations(combModel, 'tot_ATP_hydr')%looks good
@@ -142,43 +150,88 @@ end
 
 fracNeuronGlucExpAsLact = -neuronLactateImport2/(2*neuronGlucoseImport2)%0.5380
 fracAstroGlucExpAsLact = -astroLactateImport2/(2*astroGlucoseImport2)%1
+%}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Tests with the new model
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %{
-neuronModel = addPenaltiesToModel(neuronModelTempl, B, TNeuron, UNeuronCyto, UNeuronMito);
-astroModel = addPenaltiesToModel(neuronModelTempl, B, TAstro, UAstroCyto, UAstroMito);
+fullUtilModel = buildFullUtilBrainModel(minModel, 0.17, 0.03, 0.1, 0.1, 0.1, 0.1, 0.4, 0.2);
 
+mu2 = fullUtilModel;
+%mu2 = minModel;
+%glucose + unl oxygen
+mu2.ub(strcmp(mu2.rxns, 'MAR09034_REV')) = 1; %Supply glucose - oxygen should already be open
+mu2.ub(strcmp(mu2.rxns, 'MAR09135_REV')) = 0; %Do not supply lactate from the outside
+mu2.c = double(strcmp(mu2.rxns, 'tot_atp_hydr'));
 
-combModel = buildFullBrainModel(robModel,neuronModel, astroModel, fracN, fracA);
-constructEquations(combModel, 'tot_ATP_hydr')%looks good
-
-%set objective
-combModel.c = double(strcmp(combModel.rxns, 'tot_ATP_hydr'));
-%give only glucose as input (oxygen + some other is already open)
-combModel.ub(strcmp(combModel.rxns, 'MAR09034_REV')) = 1;
-
-%combModel.c = double(strcmp(combModel.rxns, 'n_MAR03964'));
-
-
+%mu2.ub(strcmp(mu2.rxns, 'MAR09048_REV')) = Inf;
 %run simulation
-res = solveLP(combModel,1);
-res
+res = solveLP(mu2,1);
+res %-31.4026 - looks good
 
-res.x(strcmp(combModel.rxns, 'n_MAR09135_REV'))%0.3650 - so, the neurons run on lactate here
-res.x(strcmp(combModel.rxns, 'a_MAR09135'))%the astrocytes do export lactate in this setting
-res.x(strcmp(combModel.rxns, 'a_MAR09135_REV'))%0 - the astrocytes do not import lactate
+%look at lactate output and export in each slice
+%
 
-constructEquations(combModel, 'n_MAR03964')
-constructEquations(combModel,'n_MAR09034_REV')
+table(minModel.rxns,constructEquations(minModel))
+
+% Lactate export: MAR06048, import: MAR08515
+
+netImpNeur = nan(100,1);
+netImpAstr = nan(100,1);
+ATPConsNeur = nan(100,1);
+ATPConsAstr = nan(100,1);
+glycNeur = nan(100,1);
+glycAstr = nan(100,1);
+mitoNeur = nan(100,1);
+mitoAstr = nan(100,1);
+ATPProdNeur = nan(100,1);
+ATPProdAstr = nan(100,1);
 
 
+ATPConsTot = -res.f;
+fracA = 0.03;
+fracN = 0.17;
+
+for i = 1:100
+    neurExpSel = strcmp(mu2.rxns, ['N_' num2str(i) '_MAR06048']);
+    neurImpSel = strcmp(mu2.rxns, ['N_' num2str(i) '_MAR08515']);
+    astrExpSel = strcmp(mu2.rxns, ['A_' num2str(i) '_MAR06048']);
+    astrImpSel = strcmp(mu2.rxns, ['A_' num2str(i) '_MAR08515']);
+
+    neurGlycSel = strcmp(mu2.rxns, ['N_' num2str(i) '_MAR04394']);
+    astrGlycSel = strcmp(mu2.rxns, ['A_' num2str(i) '_MAR04394']);
+    neurMitSel = strcmp(mu2.rxns, ['N_' num2str(i) '_MAR04152']);
+    astrMitSel = strcmp(mu2.rxns, ['A_' num2str(i) '_MAR04152']);
+
+    netImpNeur(i) = res.x(neurImpSel) - res.x(neurExpSel);
+    netImpAstr(i) = res.x(astrImpSel) - res.x(astrExpSel);
+    
+    scale = i/(100*50.5);%The average slice takes up 50.5 times more than the 0.01 util slice (mean of 1:100), and we have 100 slices
+    ATPConsNeur(i) = ATPConsTot * scale*fracN;
+    ATPConsAstr(i) = ATPConsTot * scale*fracA;
+
+    glycNeur(i) = res.x(neurGlycSel);
+    glycAstr(i) = res.x(astrGlycSel);
+    mitoNeur(i) = res.x(neurMitSel);
+    mitoAstr(i) = res.x(astrMitSel);
+
+end
+
+ATPProdNeur = glycNeur.*2 + mitoNeur.*14.75;
+ATPProdAstr = glycAstr.*2 + mitoAstr.*14.75;
 
 
+d = struct();
+d.netImpNeur = netImpNeur;
+d.netImpAstr = netImpAstr;
+d.ATPConsNeur = ATPConsNeur;
+d.ATPConsAstr = ATPConsAstr;
+d.ATPProdGlycNeur = glycNeur.*2;
+d.ATPProdGlycAstr = glycAstr.*2;
+d.ATPProdMitoNeur = mitoNeur.*14.75;
+d.ATPProdMitoAstr = mitoAstr.*14.75;
 
-
-
-
-
-
-%In astrocytes, we assume the situation is similar. However, we assume that the mobility of the .
-
+save('data/FullModelOutput.mat', 'd')
 
 %}
+
