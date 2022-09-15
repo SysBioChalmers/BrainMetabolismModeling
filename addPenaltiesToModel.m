@@ -28,9 +28,9 @@ function model = addPenaltiesToModel(model, B, TM, TG, UCyto, UMito, dontPenaliz
 if nargin < 7
     dontPenalize = false;
 end
-costOther = B*TG/UCyto;
-costCyto = B*TG/UCyto;
-costMito = B*TM/UMito;
+costOther = B*(1+TG)/UCyto;
+costCyto = B*(1+TG)/UCyto;
+costMito = B*(1+TM)/UMito;
 costMT = B/UMito;
 
 rxnsToAdd = {};

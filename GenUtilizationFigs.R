@@ -202,7 +202,7 @@ ggsave(
 
 library(R.matlab)
 
-d = readMat("data/FullModelOutput.mat")$d[,,1] 
+d = readMat("data/FullModelOutputRedMitMob.mat")$d[,,1] 
 
 
 ATPProdGlycNeur = as.numeric(d$ATPProdGlycNeur)
@@ -434,6 +434,70 @@ ggsave(
   plot = pZ,
   width = 3, height = 2.1, dpi = 300)
 
+
+#############################
+# Fig. S2
+#############################
+
+d1 = readMat("data/simpleModelOutputRedMitMob.mat")$d[,,1] 
+d2 = readMat("data/simpleModelOutputTransport.mat")$d[,,1] 
+
+glycATPGenNeur1 = as.numeric(d1$glycATPGenNeur)
+glycATPGenAstr1 = as.numeric(d1$glycATPGenAstr)
+mitoATPGenNeur1 = as.numeric(d1$mitoATPGenNeur)
+mitoATPGenAstr1 = as.numeric(d1$mitoATPGenAstr)
+
+glycATPGenNeur2 = as.numeric(d2$glycATPGenNeur)
+glycATPGenAstr2 = as.numeric(d2$glycATPGenAstr)
+mitoATPGenNeur2 = as.numeric(d2$mitoATPGenNeur)
+mitoATPGenAstr2 = as.numeric(d2$mitoATPGenAstr)
+
+sumNeur = glycATPGenNeur1 + mitoATPGenNeur1
+sumAstr = glycATPGenAstr1 + mitoATPGenAstr1
+
+y = c(glycATPGenAstr1/sumAstr, mitoATPGenAstr1/sumAstr, glycATPGenNeur1/sumNeur, mitoATPGenNeur1/sumNeur)
+x = factor(1:4,1:4,c("Astr. Glyc.","Astr. Mit.", "Neur. Glyc.","Neur. Mit."))
+df = tibble(x=x,y=y)
+
+p1<-ggplot(data=df, aes(x=x, y=y)) +
+  #  geom_bar(stat="identity", width = 0.8) +
+  geom_bar(stat="identity") +
+  coord_flip() +
+  labs(x="",y="ATP frac.") +
+  scale_y_continuous(breaks = c(0,1), labels = c('0','1' )) +
+  ggplot2::theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border = element_blank(), axis.ticks.y = element_blank()) +
+  theme(text = element_text(size=14, color="black"), axis.text.x = element_text(size=14, color="black"), axis.text.y = element_text(size=14, color="black", vjust=0.3), legend.text = element_text(size=14, color="black"), panel.background = element_blank(), plot.margin = margin(r = 13))
+p1
+
+sumNeur = glycATPGenNeur2 + mitoATPGenNeur2
+sumAstr = glycATPGenAstr2 + mitoATPGenAstr2
+
+y = c(glycATPGenAstr2/sumAstr, mitoATPGenAstr2/sumAstr, glycATPGenNeur2/sumNeur, mitoATPGenNeur2/sumNeur)
+x = factor(1:4,1:4,c("Astr. glyc.","Astr. mit.", "Neur. glyc.","Neur. mit."))
+df = tibble(x=x,y=y)
+
+p2<-ggplot(data=df, aes(x=x, y=y)) +
+  #  geom_bar(stat="identity", width = 0.8) +
+  geom_bar(stat="identity") +
+  coord_flip() +
+  labs(x="",y="ATP frac.") +
+  scale_y_continuous(breaks = c(0,1), labels = c('0','1' )) +
+  ggplot2::theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border = element_blank(), axis.ticks.y = element_blank()) +
+  theme(text = element_text(size=14, color="black"), axis.text.x = element_text(size=14, color="black"), axis.text.y = element_text(size=14, color="black", vjust=0.3), legend.text = element_text(size=14, color="black"), panel.background = element_blank(), plot.margin = margin(r = 13))
+p2
+
+#figX = ggarrange(p1, p2, nrow=1, ncol=2, labels=c("A","B"), font.label = list(size = 18))
+
+
+ggsave(
+  paste0(figPath, "Fig S2B.svg"),
+  plot = p1,
+  width = 3, height = 1.5, dpi = 300)
+
+ggsave(
+  paste0(figPath, "Fig S2C.svg"),
+  plot = p2,
+  width = 3, height = 1.5, dpi = 300)
 
 
 

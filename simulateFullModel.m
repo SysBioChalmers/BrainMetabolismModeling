@@ -32,13 +32,8 @@ function simulateFullModel(baseModel, outFilename, fracN, fracA, TNM, TNG, TAM, 
 %
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Tests with the new model
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+mu = buildFullUtilBrainModel(baseModel, fracN, fracA, TNM, TNG, TAM, TAG, mobUtilN, mobUtilA);
 
-fullUtilModel = buildFullUtilBrainModel(baseModel, fracN, fracA, TNM, TNG, TAM, TAG, mobUtilN, mobUtilA);
-
-mu = fullUtilModel;
 %glucose + unl oxygen
 mu.ub(strcmp(mu.rxns, 'MAR09034_REV')) = 1; %Supply glucose - oxygen should already be open
 mu.ub(strcmp(mu.rxns, 'MAR09135_REV')) = 0; %Do not supply lactate from the outside
@@ -94,10 +89,6 @@ for i = 1:100
     mitoAstr(i) = res.x(astrMitSel);
 
 end
-
-%ATPProdNeur = glycNeur.*2 + mitoNeur.*14.75;
-%ATPProdAstr = glycAstr.*2 + mitoAstr.*14.75;
-
 
 d = struct();
 d.netImpNeur = netImpNeur;
