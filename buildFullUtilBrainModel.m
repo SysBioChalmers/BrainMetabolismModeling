@@ -1,5 +1,5 @@
-function [totModel] = buildFullUtilBrainModel(baseModel, fracN, fracA, TNM, TNG, TAM, TAG, mobUtilN, mobUtilA)
-% buildFullBrainModel
+function totModel = buildFullUtilBrainModel(baseModel, fracN, fracA, TNM, TNG, TAM, TAG, mobUtilN, mobUtilA)
+% buildFullUtilBrainModel
 %
 % Generates a combined model with neurons, astrocytes, and 'the rest of the body' (rob).
 % 100 model pairs of astrocytes and neurons with varying utilization (0.01 - 1) is created.
