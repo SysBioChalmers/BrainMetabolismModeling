@@ -13,188 +13,6 @@ mitoDivGlycWithoutMT = 10.5520
 glycProtPerATP = 0.00312
 
 
-############################
-# Make a figure that shows how much more expensive it is to use
-# mitochondria compared to glycolysis if they are static.
-#################################
-
-#values from the matlab modeling
-#Just copied here from above for convenience
-#mitoDivGlycWithMT = 13.9088
-#mitoDivGlycWithoutMT = 10.5520
-
-
-#scales are 1 for glyc, 13.9088 and 10.5520 for mito.
-getEAMCA = function (scaleWithMT, scaleWithoutMT, trCost, util, glycProtPerATP) {
-  totalCost = ((scaleWithMT + trCost*scaleWithoutMT)/util  - scaleWithMT)*glycProtPerATP
-}
-
-util = (1:100)*0.01
-extraCostGlyc = rep(NA, length(util))
-extraCostMito = rep(NA, length(util))
-#extraCostMitoLim = rep(NA, 40)
-extraCostMitoLim = rep(NA, length(util))
-for (i in 1:length(util)) {
-  #hardcode transport cost to 0%
-  extraCostGlyc[i] = getEAMCA(1, 1, 0, util[i], glycProtPerATP)
-  extraCostMito[i] = getEAMCA(mitoDivGlycWithMT, mitoDivGlycWithoutMT, 0, util[i], glycProtPerATP)
-}
-
-for (i in 1:length(extraCostMitoLim)) {
-  #hardcode transport cost to 0%
-  #extraCostMitoLim[i] = getEAMCA(mitoDivGlycWithMT, mitoDivGlycWithoutMT, 0, 0.4, glycProtPerATP)
-  extraCostMitoLim[i] = getEAMCA(mitoDivGlycWithMT, mitoDivGlycWithoutMT, 0, util[i] + 0.4*(1-util[i]), glycProtPerATP)
-}
-
-names = c("Glyc.", "Mit.", "Mit. mob.       " );
-#allX = c(util,util,util[1:40]) 
-allX = c(util,util,util) 
-allY = c(extraCostGlyc, extraCostMito, extraCostMitoLim) 
-curve = factor(c(rep(1,length(util)), rep(2,length(util)), rep(3,length(extraCostMitoLim))), 1:3, names)
-
-ds = tibble(x=allX, y=log2(allY), curve = curve)
-
-#cols = c('#95B37B','#E0B064','#6B97BC')
-cols = c('#95B37B','#6B97BC','#6B97BC')
-#y=expression(Log[2]*" fold change maint. cost")
-pY = ggplot(ds, aes(x = x, y = y, colour = curve, linetype = curve)) +
-  geom_line(size=1.3) +
-  scale_linetype_manual(values = c(1,1,2), labels = names) +
-  scale_color_manual(values = c(cols[1],cols[2],cols[3]), labels = names) +
-  ggplot2::labs(y=expression("Log"[2]*"(EAMCA)"), x="Static utilization", colour="Pathway", linetype="Pathway") +
-#  ylim(0,1) +
-  ggplot2::theme_bw() + ggplot2::theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + 
-  theme(text = element_text(size=14, color="black"), axis.text = element_text(size=14, color="black"), legend.text = element_text(size=14, color="black"), legend.position = "bottom", legend.title=element_blank())
-#  guides(colour = guide_legend(title.position = element_blank()),
-#         linetype = guide_legend(title.position = element_blank()))
-  #guides(colour = guide_legend(title.position = "top", title.hjust = 0.5),
-  #       linetype = guide_legend(title.position = "top", title.hjust = 0.5))
-  pY
-
-
-ggsave(
-  paste0(figPath, "MaintPerUtil.png"),
-  plot = pY,
-  width = 3, height = 3.2, dpi = 300)
-
-ggsave(
-  paste0(figPath, "MaintPerUtil.eps"),
-  plot = pY,
-  width = 3, height = 3.2, dpi = 300)
-
-###################################
-# Similar plot for transport cost
-###################################
-
-util2 = 1
-transp = (1:200)*0.01
-extraCostGlyc = rep(NA, length(transp))
-extraCostMito = rep(NA, length(transp))
-for (i in 1:length(transp)) {
-  extraCostGlyc[i] = getEAMCA(1,1, transp[i], util2, glycProtPerATP)
-  extraCostMito[i] = getEAMCA(mitoDivGlycWithMT, mitoDivGlycWithoutMT, transp[i], util2, glycProtPerATP)
-}
-
-names = c("Glyc.", "Mito. resp.");
-allX = c(transp,transp) 
-allY = c(extraCostGlyc, extraCostMito) 
-curve = factor(c(rep(1,length(transp)), rep(2,length(transp))), 1:2, names)
-
-ds = tibble(x=allX, y=log2(allY), curve = curve)
-
-cols = c('#95B37B','#6B97BC')
-pY = ggplot(ds, aes(x = x, y = y, colour = curve)) +
-  geom_line(size=1.3) +
-  scale_color_manual(values = c(cols[1],cols[2],cols[3]), labels = names) +
-  ggplot2::labs(y=expression("Log"[2]*"(EAMCA)"), x="Transportation cost", colour="Pathway") +
-  ggplot2::theme_bw() + ggplot2::theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + 
-  theme(text = element_text(size=14, color="black"), axis.text = element_text(size=14, color="black"), legend.text = element_text(size=14, color="black"), legend.position = "bottom", legend.title = element_blank())
-pY
-
-
-ggsave(
-  paste0(figPath, "MaintPerTransp.png"),
-  plot = pY,
-  width = 3.1, height = 3.2, dpi = 300)
-
-ggsave(
-  paste0(figPath, "MaintPerTransp.eps"),
-  plot = pY,
-  width = 3.1, height = 3.2, dpi = 300)
-
-
-
-###########################
-#Now a  plot showing optimal usage (glyc)
-#neurons and astrocytes when lactate export is limited
-###########################
-
-#calculate the cost for both glyc and mito if we assume mito mobility = 0.4 and transport = 0.1
-
-util = (1:1000)*0.001
-mitoExtraCost = rep(NA, length(util))
-cytoExtraCost = rep(NA, length(util))
-
-for (i in 1:length(util)) {
-  #Transportation cost set to 0.1
-  mitoExtraCost[i] = getEAMCA(mitoDivGlycWithMT, mitoDivGlycWithoutMT, 0.1, util[i] + 0.4*(1-util[i]), glycProtPerATP)
-  cytoExtraCost[i] = getEAMCA(1,1, 0.1, util[i], glycProtPerATP)
-}
-
-#check at which positions glycolysis is more optimal. The lower switch can be calculated as 
-#the saved maintenance cost per lactate output, where lactate output is just represented by
-
-#check at which positions glycolysis is more optimal. The lower switch can be calculated as 
-#the saved maintenance cost per lactate output, where lactate output is just represented by
-#the static utilization, since the enzyme is inactive the rest of the time.
-diff = mitoExtraCost - cytoExtraCost
-sel = diff >= diff[length(util)]
-gainY = diff[sel]
-
-firstEdge = 0.0529
-secEdge = 0.0889
-
-allX = c(firstEdge,util[sel]) #firstEdge is for making the curve go to the bottom, the x value - manual interpolation
-allY = c(min(gainY),gainY) #min(gainY) is to find the bottom of the curve
-allY[secEdge*1000]
-ds = tibble(x=log2(allX + 0.10), y=log2(allY))
-
-cols2 = c('#c0D0F8','#C0E9B0','#FBF0D0')
-names2 = c('Mit.', 'Glyc.','Both')
-
-maxY = 4;
-
-d = tibble(x1=log2(c(0.01,firstEdge,secEdge,0.40) + 0.10), x2=log2(c(firstEdge, secEdge, 0.40, 1) + 0.10), y1=log2(rep(min(allY), 4)), y2=rep(maxY, 4), Optimal = factor(c(1,3,2,3),1:3,names2))
-dLine1 = tibble(x=log2(c(secEdge,secEdge) + 0.10), y=c(min(ds$y), maxY))
-dLine2 = tibble(x=log2(c(0.40,0.40) + 0.10), y=c(min(ds$y), maxY))
-dLine3 = tibble(x=log2(c(firstEdge,firstEdge) + 0.10), y=c(min(ds$y), maxY))
-
-pZ = ggplot() +
-  geom_rect(data=d, mapping=aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2, fill=Optimal), color=NA, size=0,alpha=1) +
-  geom_line(data = ds,size=1.3, mapping=aes(x = x, y = y), color = "black") +
-  geom_line(data=dLine1,aes(x = x, y=y), color = "black", linetype = "dashed") +
-  geom_line(data=dLine2,aes(x = x, y=y), color = "black", linetype = "dashed") +
-  geom_line(data=dLine3,aes(x = x, y=y), color = "black", linetype = "dashed") +
-  scale_fill_manual(values = c(cols2[1],cols2[2],cols2[3]), labels = names2) +
-  scale_x_continuous(breaks = log2(c(0,0.10,0.25,0.5,1) + 0.10), labels = c('0','0.10','0.25','0.5','1' )) +
-  ggplot2::labs(y=expression("Log"[2]*"(EAMCA"[m]*" - EAMCA"[g]*")      "), x="Static utilization", colour="Pathway") +
-  ggplot2::theme_bw() + ggplot2::theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + 
-  theme(text = element_text(size=14, color="black"), axis.text = element_text(size=14, color="black"), legend.text = element_text(size=14, color="black"), legend.position = "bottom", legend.box = "horizontal", plot.margin = margin(r = 13), legend.title.align = 0.5) +
-  guides(fill = guide_legend(title.position = "top", order=1, direction="horizontal", title = "Optimal pathway:")) + #, title.justification='center')) + 
-  ylim(log2(min(allY)),maxY)
-pZ
-
-ggsave(
-  paste0(figPath, "OptimalUse.png"),
-  plot = pZ,
-  width = 5.25, height = 2.54, dpi = 300)
-
-ggsave(
-  paste0(figPath, "OptimalUse.eps"),
-  plot = pZ,
-  width = 2.8, height = 3.35, dpi = 300)
-
-
 
 #################################
 #2B based on modeling
@@ -415,7 +233,7 @@ ggsave(
   width = 5.5, height = 2.5, dpi = 300)
 
 #################################
-# Modeling of the full model - Utilization
+# Modeling of the full model - Utilization (Fig. 2F)
 #################################
 
 
@@ -536,7 +354,7 @@ ggsave(
 
 
 #################################
-# Modeling of the full model - Transportation
+# Modeling of the full model - Transportation (Fig. S3)
 #################################
 
 
@@ -705,8 +523,6 @@ p2<-ggplot(data=df, aes(x=x, y=y)) +
   theme(text = element_text(size=14, color="black"), axis.text.x = element_text(size=14, color="black"), axis.text.y = element_text(size=14, color="black", vjust=0.3), legend.text = element_text(size=14, color="black"), panel.background = element_blank(), plot.margin = margin(r = 13))
 p2
 
-#figX = ggarrange(p1, p2, nrow=1, ncol=2, labels=c("A","B"), font.label = list(size = 18))
-
 
 ggsave(
   paste0(figPath, "Fig S2B.svg"),
@@ -717,6 +533,169 @@ ggsave(
   paste0(figPath, "Fig S2C.svg"),
   plot = p2,
   width = 3, height = 1.5, dpi = 300)
+
+
+
+
+################################
+################################
+# Below are tests for verifying
+# Fig. 2B-D
+################################
+################################
+
+
+
+############################
+# Make a figure that shows how much more expensive it is to use
+# mitochondria compared to glycolysis if they are static.
+#################################
+
+#values from the matlab modeling
+#Just copied here from above for convenience
+#mitoDivGlycWithMT = 13.9088
+#mitoDivGlycWithoutMT = 10.5520
+
+
+#scales are 1 for glyc, 13.9088 and 10.5520 for mito.
+getEAMCA = function (scaleWithMT, scaleWithoutMT, trCost, util, glycProtPerATP) {
+  totalCost = ((scaleWithMT + trCost*scaleWithoutMT)/util  - scaleWithMT)*glycProtPerATP
+}
+
+util = (1:100)*0.01
+extraCostGlyc = rep(NA, length(util))
+extraCostMito = rep(NA, length(util))
+#extraCostMitoLim = rep(NA, 40)
+extraCostMitoLim = rep(NA, length(util))
+for (i in 1:length(util)) {
+  #hardcode transport cost to 0%
+  extraCostGlyc[i] = getEAMCA(1, 1, 0, util[i], glycProtPerATP)
+  extraCostMito[i] = getEAMCA(mitoDivGlycWithMT, mitoDivGlycWithoutMT, 0, util[i], glycProtPerATP)
+}
+
+for (i in 1:length(extraCostMitoLim)) {
+  #hardcode transport cost to 0%
+  #extraCostMitoLim[i] = getEAMCA(mitoDivGlycWithMT, mitoDivGlycWithoutMT, 0, 0.4, glycProtPerATP)
+  extraCostMitoLim[i] = getEAMCA(mitoDivGlycWithMT, mitoDivGlycWithoutMT, 0, util[i] + 0.4*(1-util[i]), glycProtPerATP)
+}
+
+names = c("Glyc.", "Mit.", "Mit. mob.       " );
+#allX = c(util,util,util[1:40]) 
+allX = c(util,util,util) 
+allY = c(extraCostGlyc, extraCostMito, extraCostMitoLim) 
+curve = factor(c(rep(1,length(util)), rep(2,length(util)), rep(3,length(extraCostMitoLim))), 1:3, names)
+
+ds = tibble(x=allX, y=log2(allY), curve = curve)
+
+#cols = c('#95B37B','#E0B064','#6B97BC')
+cols = c('#95B37B','#6B97BC','#6B97BC')
+#y=expression(Log[2]*" fold change maint. cost")
+pY = ggplot(ds, aes(x = x, y = y, colour = curve, linetype = curve)) +
+  geom_line(size=1.3) +
+  scale_linetype_manual(values = c(1,1,2), labels = names) +
+  scale_color_manual(values = c(cols[1],cols[2],cols[3]), labels = names) +
+  ggplot2::labs(y=expression("Log"[2]*"(EAMCA)"), x="Static utilization", colour="Pathway", linetype="Pathway") +
+  #  ylim(0,1) +
+  ggplot2::theme_bw() + ggplot2::theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + 
+  theme(text = element_text(size=14, color="black"), axis.text = element_text(size=14, color="black"), legend.text = element_text(size=14, color="black"), legend.position = "bottom", legend.title=element_blank())
+#  guides(colour = guide_legend(title.position = element_blank()),
+#         linetype = guide_legend(title.position = element_blank()))
+#guides(colour = guide_legend(title.position = "top", title.hjust = 0.5),
+#       linetype = guide_legend(title.position = "top", title.hjust = 0.5))
+pY
+
+###################################
+# Similar plot for transport cost
+###################################
+
+util2 = 1
+transp = (1:200)*0.01
+extraCostGlyc = rep(NA, length(transp))
+extraCostMito = rep(NA, length(transp))
+for (i in 1:length(transp)) {
+  extraCostGlyc[i] = getEAMCA(1,1, transp[i], util2, glycProtPerATP)
+  extraCostMito[i] = getEAMCA(mitoDivGlycWithMT, mitoDivGlycWithoutMT, transp[i], util2, glycProtPerATP)
+}
+
+names = c("Glyc.", "Mito. resp.");
+allX = c(transp,transp) 
+allY = c(extraCostGlyc, extraCostMito) 
+curve = factor(c(rep(1,length(transp)), rep(2,length(transp))), 1:2, names)
+
+ds = tibble(x=allX, y=log2(allY), curve = curve)
+
+cols = c('#95B37B','#6B97BC')
+pY = ggplot(ds, aes(x = x, y = y, colour = curve)) +
+  geom_line(size=1.3) +
+  scale_color_manual(values = c(cols[1],cols[2],cols[3]), labels = names) +
+  ggplot2::labs(y=expression("Log"[2]*"(EAMCA)"), x="Transportation cost", colour="Pathway") +
+  ggplot2::theme_bw() + ggplot2::theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + 
+  theme(text = element_text(size=14, color="black"), axis.text = element_text(size=14, color="black"), legend.text = element_text(size=14, color="black"), legend.position = "bottom", legend.title = element_blank())
+pY
+
+
+###########################
+#Now a  plot showing optimal usage (glyc)
+#neurons and astrocytes when lactate export is limited
+###########################
+
+#calculate the cost for both glyc and mito if we assume mito mobility = 0.4 and transport = 0.1
+
+util = (1:1000)*0.001
+mitoExtraCost = rep(NA, length(util))
+cytoExtraCost = rep(NA, length(util))
+
+for (i in 1:length(util)) {
+  #Transportation cost set to 0.1
+  mitoExtraCost[i] = getEAMCA(mitoDivGlycWithMT, mitoDivGlycWithoutMT, 0.1, util[i] + 0.4*(1-util[i]), glycProtPerATP)
+  cytoExtraCost[i] = getEAMCA(1,1, 0.1, util[i], glycProtPerATP)
+}
+
+#check at which positions glycolysis is more optimal. The lower switch can be calculated as 
+#the saved maintenance cost per lactate output, where lactate output is just represented by
+
+#check at which positions glycolysis is more optimal. The lower switch can be calculated as 
+#the saved maintenance cost per lactate output, where lactate output is just represented by
+#the static utilization, since the enzyme is inactive the rest of the time.
+diff = mitoExtraCost - cytoExtraCost
+sel = diff >= diff[length(util)]
+gainY = diff[sel]
+
+firstEdge = 0.0529
+secEdge = 0.0889
+
+allX = c(firstEdge,util[sel]) #firstEdge is for making the curve go to the bottom, the x value - manual interpolation
+allY = c(min(gainY),gainY) #min(gainY) is to find the bottom of the curve
+allY[secEdge*1000]
+ds = tibble(x=log2(allX + 0.10), y=log2(allY))
+
+cols2 = c('#c0D0F8','#C0E9B0','#FBF0D0')
+names2 = c('Mit.', 'Glyc.','Both')
+
+maxY = 4;
+
+d = tibble(x1=log2(c(0.01,firstEdge,secEdge,0.40) + 0.10), x2=log2(c(firstEdge, secEdge, 0.40, 1) + 0.10), y1=log2(rep(min(allY), 4)), y2=rep(maxY, 4), Optimal = factor(c(1,3,2,3),1:3,names2))
+dLine1 = tibble(x=log2(c(secEdge,secEdge) + 0.10), y=c(min(ds$y), maxY))
+dLine2 = tibble(x=log2(c(0.40,0.40) + 0.10), y=c(min(ds$y), maxY))
+dLine3 = tibble(x=log2(c(firstEdge,firstEdge) + 0.10), y=c(min(ds$y), maxY))
+
+pZ = ggplot() +
+  geom_rect(data=d, mapping=aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2, fill=Optimal), color=NA, size=0,alpha=1) +
+  geom_line(data = ds,size=1.3, mapping=aes(x = x, y = y), color = "black") +
+  geom_line(data=dLine1,aes(x = x, y=y), color = "black", linetype = "dashed") +
+  geom_line(data=dLine2,aes(x = x, y=y), color = "black", linetype = "dashed") +
+  geom_line(data=dLine3,aes(x = x, y=y), color = "black", linetype = "dashed") +
+  scale_fill_manual(values = c(cols2[1],cols2[2],cols2[3]), labels = names2) +
+  scale_x_continuous(breaks = log2(c(0,0.10,0.25,0.5,1) + 0.10), labels = c('0','0.10','0.25','0.5','1' )) +
+  ggplot2::labs(y=expression("Log"[2]*"(EAMCA"[m]*" - EAMCA"[g]*")      "), x="Static utilization", colour="Pathway") +
+  ggplot2::theme_bw() + ggplot2::theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + 
+  theme(text = element_text(size=14, color="black"), axis.text = element_text(size=14, color="black"), legend.text = element_text(size=14, color="black"), legend.position = "bottom", legend.box = "horizontal", plot.margin = margin(r = 13), legend.title.align = 0.5) +
+  guides(fill = guide_legend(title.position = "top", order=1, direction="horizontal", title = "Optimal pathway:")) + #, title.justification='center')) + 
+  ylim(log2(min(allY)),maxY)
+pZ
+
+
+
 
 
 
