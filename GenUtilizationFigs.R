@@ -15,7 +15,7 @@ glycProtPerATP = 0.00312
 
 
 #################################
-#2B based on modeling
+#2B
 #################################
 s = readMat("data/2B-DData.mat")$s[,,1] 
 transp = as.numeric(s$transp)
@@ -51,7 +51,7 @@ ggsave(
 
 
 #################################
-#2C based on modeling
+#2C
 #################################
 s = readMat("data/2B-DData.mat")$s[,,1] 
 util = as.numeric(s$util)
@@ -90,7 +90,7 @@ ggsave(
 
 
 #################################
-#2D based on modeling
+#2D
 #################################
 s = readMat("data/2B-DData.mat")$s[,,1] 
 util = as.numeric(s$util2)
@@ -211,8 +211,7 @@ bp = ggplot(data=dfPlot, aes(x=x, y=y, fill=pathway)) +
                 position=position_dodge(.9)) +
   coord_cartesian(ylim=c(0.8, 0.89)) +
   labs( y="Correlation, 10x vs bulk", x="Covariates regressed out", fill="Fit: ") +
-  #scale_fill_manual(values=c("#ACBEE8", "#6382D3", "#82E182", "#229A22")) +
-  scale_fill_manual(values=c("#82E182", "#229A22", "#E47060", "#AC210E")) + #so, use red and green as in figure 5
+  scale_fill_manual(values=c("#82E182", "#229A22", "#E47060", "#AC210E")) + 
   theme_bw() +
   theme(axis.text = element_text(size = 8), legend.position="bottom")
 
@@ -221,7 +220,7 @@ pY = ggplot(ds, aes(x = cars, y = util, fill=pathway)) +
   geom_bar(stat="identity", size=1.3,position=position_dodge()) +
   labs(y="Utilization", x="Catalytic capacity slice") +
   ggplot2::theme_bw() + ggplot2::theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + 
-  scale_fill_manual(values=c("#444444", "#AAAAAA")) + #so, use red and green as in figure 5
+  scale_fill_manual(values=c("#444444", "#AAAAAA")) + 
   theme(text = element_text(size=14, color="black"), axis.text = element_text(size=14, color="black"), 
         legend.text = element_text(size=14, color="black"), legend.position = c(0.8,0.85), legend.title=element_blank(), 
         legend.direction="horizontal")
@@ -289,7 +288,6 @@ pZ = ggplot(df, aes(x=x)) +
   ggplot2::labs(y="ATP Frac.", x="Static utilization") +
   ggplot2::theme_bw() + ggplot2::theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + 
   theme(text = element_text(size=14, color="black"), axis.text = element_text(size=14, color="black"), legend.text = element_text(size=14, color="black"), legend.position = "none", legend.box = "vertical", plot.margin = margin(t=20), axis.text.x = element_blank(), axis.title.x = element_blank()) +
-  #guides(fill = guide_legend(order=1, direction="horizontal", title = element_blank()))
   annotate(geom="text", x=-1.54, y=0.5, label="Neurons", color="black", size=5)  #fontface=2
 pZ
 
@@ -337,11 +335,9 @@ pZ = ggplot(df, aes(x=x)) +
   scale_fill_manual(values = cols3, labels = names3, breaks=c('Mito', 'Glyc', 'Mix')) +
   scale_x_continuous(breaks = log2(c(0,0.10,0.25,0.5,1) + 0.10), labels = c('0','0.10','0.25','0.5','1' )) +
   scale_y_continuous(breaks = c(0,1), labels = c('0','1' )) +
-  #scale_fill_discrete(breaks=c('Mito', 'Glyc', 'Mix')) +
   ggplot2::labs(y="ATP Frac.", x="Static utilization") +
   ggplot2::theme_bw() + ggplot2::theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + 
   theme(text = element_text(size=14, color="black"), axis.text = element_text(size=14, color="black"), legend.text = element_text(size=14, color="black"), legend.position = "bottom", legend.box = "vertical", plot.margin = margin(t=20)) +
-  #guides(colour = guide_legend(title="Curve", direction="vertical", title.position = "top", title.hjust = 0.5, order=1), fill = guide_legend(title.position = "top", title.hjust = 0.5, order=2, title = "Optimal pathway"))
   guides(fill = guide_legend(order=1, direction="horizontal", title = element_blank())) +
   annotate(geom="text", x=-1.57, y=0.5, label="Astrocytes", color="black", size=5)  #fontface=2
 pZ
@@ -408,7 +404,6 @@ pZ = ggplot(df, aes(x=x)) +
   ggplot2::labs(y="ATP Frac.", x="Static utilization") +
   ggplot2::theme_bw() + ggplot2::theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + 
   theme(text = element_text(size=14, color="black"), axis.text = element_text(size=14, color="black"), legend.text = element_text(size=14, color="black"), legend.position = "none", legend.box = "vertical", plot.margin = margin(t=20), axis.text.x = element_blank(), axis.title.x = element_blank()) +
-  #guides(fill = guide_legend(order=1, direction="horizontal", title = element_blank()))
   annotate(geom="text", x=-1.54, y=0.5, label="Neurons", color="black", size=5)  #fontface=2
 pZ
 
@@ -456,11 +451,9 @@ pZ = ggplot(df, aes(x=x)) +
   scale_fill_manual(values = cols3, labels = names3, breaks=c('Mito', 'Glyc', 'Mix')) +
   scale_x_continuous(breaks = log2(c(0,0.10,0.25,0.5,1) + 0.10), labels = c('0','0.10','0.25','0.5','1' )) +
   scale_y_continuous(breaks = c(0,1), labels = c('0','1' )) +
-  #scale_fill_discrete(breaks=c('Mito', 'Glyc', 'Mix')) +
   ggplot2::labs(y="ATP Frac.", x="Static utilization") +
   ggplot2::theme_bw() + ggplot2::theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + 
   theme(text = element_text(size=14, color="black"), axis.text = element_text(size=14, color="black"), legend.text = element_text(size=14, color="black"), legend.position = "bottom", legend.box = "vertical", plot.margin = margin(t=20)) +
-  #guides(colour = guide_legend(title="Curve", direction="vertical", title.position = "top", title.hjust = 0.5, order=1), fill = guide_legend(title.position = "top", title.hjust = 0.5, order=2, title = "Optimal pathway"))
   guides(fill = guide_legend(order=1, direction="horizontal", title = element_blank())) +
   annotate(geom="text", x=-1.57, y=0.5, label="Astrocytes", color="black", size=5)  #fontface=2
 pZ
@@ -494,16 +487,20 @@ sumAstr = glycATPGenAstr1 + mitoATPGenAstr1
 
 y = c(glycATPGenAstr1/sumAstr, mitoATPGenAstr1/sumAstr, glycATPGenNeur1/sumNeur, mitoATPGenNeur1/sumNeur)
 x = factor(1:4,1:4,c("Astr. Glyc.","Astr. Mit.", "Neur. Glyc.","Neur. Mit."))
-df = tibble(x=x,y=y)
+ct = as.factor(c(1,1,2,2))
+df = tibble(x=x,y=y,ct=ct)
 
-p1<-ggplot(data=df, aes(x=x, y=y)) +
+p1<-ggplot(data=df, aes(x=x, y=y, fill=ct)) +
   #  geom_bar(stat="identity", width = 0.8) +
-  geom_bar(stat="identity") +
+  geom_bar(stat="identity", color = "NA") +
+  scale_fill_manual(values=c("#AAAAAA", "#444444")) +
   coord_flip() +
   labs(x="",y="ATP frac.") +
   scale_y_continuous(breaks = c(0,1), labels = c('0','1' )) +
   ggplot2::theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border = element_blank(), axis.ticks.y = element_blank()) +
-  theme(text = element_text(size=14, color="black"), axis.text.x = element_text(size=14, color="black"), axis.text.y = element_text(size=14, color="black", vjust=0.3), legend.text = element_text(size=14, color="black"), panel.background = element_blank(), plot.margin = margin(r = 13))
+  theme(text = element_text(size=14, color="black"), axis.text.x = element_text(size=14, color="black"), 
+        axis.text.y = element_text(size=14, color="black", vjust=0.3), legend.text = element_text(size=14, color="black"), 
+        panel.background = element_blank(), plot.margin = margin(r = 13), legend.position = "none")
 p1
 
 sumNeur = glycATPGenNeur2 + mitoATPGenNeur2
@@ -511,16 +508,19 @@ sumAstr = glycATPGenAstr2 + mitoATPGenAstr2
 
 y = c(glycATPGenAstr2/sumAstr, mitoATPGenAstr2/sumAstr, glycATPGenNeur2/sumNeur, mitoATPGenNeur2/sumNeur)
 x = factor(1:4,1:4,c("Astr. glyc.","Astr. mit.", "Neur. glyc.","Neur. mit."))
-df = tibble(x=x,y=y)
+ct = as.factor(c(1,1,2,2))
+df = tibble(x=x,y=y,ct=ct)
 
-p2<-ggplot(data=df, aes(x=x, y=y)) +
-  #  geom_bar(stat="identity", width = 0.8) +
-  geom_bar(stat="identity") +
+p2<-ggplot(data=df, aes(x=x, y=y, fill=ct)) +
+  geom_bar(stat="identity", color = "NA") +
+  scale_fill_manual(values=c("#AAAAAA", "#444444")) +
   coord_flip() +
   labs(x="",y="ATP frac.") +
   scale_y_continuous(breaks = c(0,1), labels = c('0','1' )) +
   ggplot2::theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border = element_blank(), axis.ticks.y = element_blank()) +
-  theme(text = element_text(size=14, color="black"), axis.text.x = element_text(size=14, color="black"), axis.text.y = element_text(size=14, color="black", vjust=0.3), legend.text = element_text(size=14, color="black"), panel.background = element_blank(), plot.margin = margin(r = 13))
+  theme(text = element_text(size=14, color="black"), axis.text.x = element_text(size=14, color="black"), 
+        axis.text.y = element_text(size=14, color="black", vjust=0.3), legend.text = element_text(size=14, color="black"), 
+        panel.background = element_blank(), plot.margin = margin(r = 13), legend.position = "none")
 p2
 
 
