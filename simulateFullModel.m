@@ -1,4 +1,4 @@
-function simulateFullModel(baseModel, outFilename, fracN, fracA, TNM, TNG, TAM, TAG, mobUtilN, mobUtilA)
+function simulateFullModel(baseModel, outFilename, fracN, fracA, TNM, TNG, TAM, TAG, mobUtilN, mobUtilA, TMT)
 % simulateFullModel
 %
 % Generates a combined model from the params supplied and runs a simulation.
@@ -28,11 +28,15 @@ function simulateFullModel(baseModel, outFilename, fracN, fracA, TNM, TNG, TAM, 
 %
 %   mobUtilA        Fraction of unused time in astrocytes that mitochondria can be used somewhere else
 %
+%   TMT             Transportation penalty for MT enzymes, - optional, default 0
+%
 % Output:
 %
 
-
-mu = buildFullUtilBrainModel(baseModel, fracN, fracA, TNM, TNG, TAM, TAG, mobUtilN, mobUtilA);
+if nargin < 11
+    TMT = 0;
+end
+mu = buildFullUtilBrainModel(baseModel, fracN, fracA, TNM, TNG, TAM, TAG, mobUtilN, mobUtilA, TMT);
 
 %glucose + unl oxygen
 mu.ub(strcmp(mu.rxns, 'MAR09034_REV')) = 1; %Supply glucose - oxygen should already be open

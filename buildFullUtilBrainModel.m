@@ -1,4 +1,4 @@
-function totModel = buildFullUtilBrainModel(baseModel, fracN, fracA, TNM, TNG, TAM, TAG, mobUtilN, mobUtilA)
+function totModel = buildFullUtilBrainModel(baseModel, fracN, fracA, TNM, TNG, TAM, TAG, mobUtilN, mobUtilA, TMT)
 % buildFullUtilBrainModel
 %
 % Generates a combined model with neurons, astrocytes, and 'the rest of the body' (rob).
@@ -30,10 +30,16 @@ function totModel = buildFullUtilBrainModel(baseModel, fracN, fracA, TNM, TNG, T
 %
 %   mobUtilA        Fraction of unused time in astrocytes that mitochondria can be used somewhere else
 %
+%   TMT             Transportation penalty for MT enzymes, - optional, default 0
+%
 % Output:
 %
 %   outModel        The full model
 %
+
+if nargin < 10
+    TMT = 0;
+end
 
 %for debugging
 %baseModel = minModel;
@@ -77,8 +83,8 @@ ANBase.ub(sel) = 0;
 for i = 1:100
     NTag = ['N_' num2str(i) '_'];
     ATag = ['A_' num2str(i) '_'];
-    N = addPenaltiesToModel(ANBase, 1, TNM, TNG, i/100, i/100 + (1 - i/100)*mobUtilN);
-    A = addPenaltiesToModel(ANBase, 1, TAM, TAG, i/100, i/100 + (1 - i/100)*mobUtilA);
+    N = addPenaltiesToModel(ANBase, 1, TNM, TNG, i/100, i/100 + (1 - i/100)*mobUtilN, false, TMT);
+    A = addPenaltiesToModel(ANBase, 1, TAM, TAG, i/100, i/100 + (1 - i/100)*mobUtilA, false, TMT);
     N = tagModel(N, NTag);
     A = tagModel(A, ATag);
     AN = joinModels(N,A);

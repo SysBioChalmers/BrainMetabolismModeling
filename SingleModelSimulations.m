@@ -198,7 +198,7 @@ end
 
 %the one to compare with is the one with full util, so subtract from the util(100) to get the diff
 for i = 1:length(util)
-    EAMCAGlyc(i) = (prodGlyc(100) - prodGlyc(i))/prodGlyc(100);
+    EAMCAGlyc(i) = (prodGlyc(100) - prodGlyc(i))/ATPProdGlyc;
 end
 log2(EAMCAGlyc)
 
@@ -237,7 +237,7 @@ end
 
 %the one to compare with is the one with full util, so subtract from the util(100) to get the diff
 for i = 1:length(util)
-    EAMCAMito(i) = (prodMito(100) - prodMito(i))/prodMito(100);
+    EAMCAMito(i) = (prodMito(100) - prodMito(i))/ATPProdMito;
 end
 log2(EAMCAMito)
 
@@ -329,7 +329,7 @@ end
 
 %the one to compare with is the one with full util, so subtract from the util(100) to get the diff
 for i = 1:length(transp)
-    EAMCATrGlyc(i) = (prodGlyc(100) - prodTrGlyc(i))/prodGlyc(100); %We use the data prodGlyc(100) from 2C here, it has no transport or util costs
+    EAMCATrGlyc(i) = (prodGlyc(100) - prodTrGlyc(i))/ATPProdGlyc;
 end
 log2(EAMCATrGlyc)
 
@@ -368,7 +368,7 @@ end
 
 %the one to compare with is the one with full util, so subtract from the util(100) to get the diff
 for i = 1:length(transp)
-    EAMCATrMito(i) = (prodMito(100) - prodTrMito(i))/prodMito(100);%We use the data prodGlyc(100) from 2C here, it has no transport or util costs
+    EAMCATrMito(i) = (prodMito(100) - prodTrMito(i))/ATPProdMito;
 end
 log2(EAMCATrMito)
 

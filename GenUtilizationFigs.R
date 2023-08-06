@@ -15,7 +15,7 @@ glycProtPerATP = 0.00312
 
 
 #################################
-#2B
+#4B
 #################################
 s = readMat("data/2B-DData.mat")$s[,,1] 
 transp = as.numeric(s$transp)
@@ -51,7 +51,7 @@ ggsave(
 
 
 #################################
-#2C
+#4C
 #################################
 s = readMat("data/2B-DData.mat")$s[,,1] 
 util = as.numeric(s$util)
@@ -63,7 +63,7 @@ names = c("Glyc.", "Mit.", "Mit. mob.       " );
 #allX = c(util,util,util[1:40]) 
 allX = c(util,util,util) 
 allY = c(EAMCAGlyc, EAMCAMito, EAMCAMitoMob) 
-curve = factor(c(rep(1,length(util)), rep(2,length(util)), rep(3,length(extraCostMitoLim))), 1:3, names)
+curve = factor(c(rep(1,length(util)), rep(2,length(util)), rep(3,length(EAMCAMitoMob))), 1:3, names)
 
 ds = tibble(x=allX, y=log2(allY), curve = curve)
 
@@ -90,7 +90,7 @@ ggsave(
 
 
 #################################
-#2D
+#4D
 #################################
 s = readMat("data/2B-DData.mat")$s[,,1] 
 util = as.numeric(s$util2)
@@ -115,21 +115,24 @@ allY = c(min(gainY),gainY) #min(gainY) is to find the bottom of the curve
 allY[secEdge*1000]
 ds = tibble(x=log2(allX + 0.10), y=log2(allY))
 
-cols2 = c('#c0D0F8','#C0E9B0','#FBF0D0')
-names2 = c('Mit.', 'Glyc.','Both')
+#cols2 = c('#c0D0F8','#C0E9B0','#FBF0D0')
+#names2 = c('Mit.', 'Glyc.','Both')
+cols2 = c('#c0D0F8','#C0E9B0')
+names2 = c('Mito. Resp.', 'Glyc.')
 
 maxY = -1;
 
-d = tibble(x1=log2(c(0.01,firstEdge,secEdge,0.40) + 0.10), x2=log2(c(firstEdge, secEdge, 0.40, 1) + 0.10), y1=log2(rep(min(allY), 4)), y2=rep(maxY, 4), Optimal = factor(c(1,3,2,3),1:3,names2))
-dLine1 = tibble(x=log2(c(secEdge,secEdge) + 0.10), y=c(min(ds$y), maxY))
-dLine2 = tibble(x=log2(c(0.40,0.40) + 0.10), y=c(min(ds$y), maxY))
-dLine3 = tibble(x=log2(c(firstEdge,firstEdge) + 0.10), y=c(min(ds$y), maxY))
+#d = tibble(x1=log2(c(0.01,firstEdge,secEdge,0.40) + 0.10), x2=log2(c(firstEdge, secEdge, 0.40, 1) + 0.10), y1=log2(rep(min(allY), 4)), y2=rep(maxY, 4), Optimal = factor(c(1,3,2,3),1:3,names2))
+d = tibble(x1=log2(c(0.01,firstEdge) + 0.10), x2=log2(c(firstEdge, 1) + 0.10), y1=log2(rep(min(allY), 2)), y2=rep(maxY, 2), Optimal = factor(c(1,2),1:2,names2))
+#dLine1 = tibble(x=log2(c(secEdge,secEdge) + 0.10), y=c(min(ds$y), maxY))
+#dLine2 = tibble(x=log2(c(0.40,0.40) + 0.10), y=c(min(ds$y), maxY))
+#dLine3 = tibble(x=log2(c(firstEdge,firstEdge) + 0.10), y=c(min(ds$y), maxY))
 
 pZ = ggplot() +
   geom_rect(data=d, mapping=aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2, fill=Optimal), color=NA, size=0,alpha=1) +
   geom_line(data = ds,size=1.3, mapping=aes(x = x, y = y), color = "black") +
-  geom_line(data=dLine1,aes(x = x, y=y), color = "black", linetype = "dashed") +
-  geom_line(data=dLine2,aes(x = x, y=y), color = "black", linetype = "dashed") +
+#  geom_line(data=dLine1,aes(x = x, y=y), color = "black", linetype = "dashed") +
+#  geom_line(data=dLine2,aes(x = x, y=y), color = "black", linetype = "dashed") +
   geom_line(data=dLine3,aes(x = x, y=y), color = "black", linetype = "dashed") +
   scale_fill_manual(values = c(cols2[1],cols2[2],cols2[3]), labels = names2) +
   scale_x_continuous(breaks = log2(c(0,0.10,0.25,0.5,1) + 0.10), labels = c('0','0.10','0.25','0.5','1' )) +
@@ -218,7 +221,7 @@ bp = ggplot(data=dfPlot, aes(x=x, y=y, fill=pathway)) +
 
 pY = ggplot(ds, aes(x = cars, y = util, fill=pathway)) +
   geom_bar(stat="identity", size=1.3,position=position_dodge()) +
-  labs(y="Utilization", x="Catalytic capacity slice") +
+  labs(y="Utilization", x="ATP production capacity slice") +
   ggplot2::theme_bw() + ggplot2::theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + 
   scale_fill_manual(values=c("#444444", "#AAAAAA")) + 
   theme(text = element_text(size=14, color="black"), axis.text = element_text(size=14, color="black"), 
@@ -232,7 +235,7 @@ ggsave(
   width = 5.5, height = 2.5, dpi = 300)
 
 #################################
-# Modeling of the full model - Utilization (Fig. 2F)
+# Modeling of the full model - Utilization (Fig. 4G)
 #################################
 
 
@@ -465,8 +468,128 @@ ggsave(
   width = 3, height = 2.1, dpi = 300)
 
 
+
+#################################
+# Modeling of the full model - Check importance of transport cost of MT genes (Fig. S3)
+#################################
+
+
+library(R.matlab)
+
+d = readMat("data/FullModelOutputRedMitMobTMT.mat")$d[,,1] 
+
+
+ATPProdGlycNeur = as.numeric(d$ATPProdGlycNeur)
+ATPProdGlycAstr = as.numeric(d$ATPProdGlycAstr)
+ATPProdMitoNeur = as.numeric(d$ATPProdMitoNeur)
+ATPProdMitoAstr = as.numeric(d$ATPProdMitoAstr)
+
+#Neurons
+##############
+
+
+NPureGlyc = ATPProdGlycNeur - ATPProdMitoNeur/14.5
+NPureGlyc[NPureGlyc < 0] = 0
+NPureMito = ATPProdMitoNeur - ATPProdGlycNeur*14.5
+NPureMito[NPureMito < 0] = 0
+NMix = ATPProdGlycNeur + ATPProdMitoNeur - NPureGlyc - NPureMito
+
+allY = NPureGlyc + NPureMito + NMix
+NPureGlyc = NPureGlyc / allY
+NPureMito = NPureMito / allY
+NMix = NMix / allY
+
+#avoid slopes between two points by repeating all points 10 times and spreading out the X
+NPGExp = rep(NPureGlyc, each=10)
+NPMExp = rep(NPureMito, each=10)
+NPBExp = rep(NMix, each=10)
+
+
+df = tibble(x=log2(((1:1000) + 5)/1000 + 0.10) , Mito = NPMExp, Glyc = NPGExp, Both = NPBExp, zeros = rep(0,1000))
+
+
+cols3 = c('#c0D0F8','#C0E9B0','#FBF0D0')
+
+names3 = c("Mito.", "Glyc.", "Both")
+
+pZ = ggplot(df, aes(x=x)) +
+  geom_area(aes(y=Mito+Glyc+Both, fill="Mix")) + 
+  geom_area(aes(y=Mito+Glyc, fill="Glyc")) + 
+  geom_area(aes(y=Mito, fill="Mito")) +
+  geom_line(aes(y=Mito+Glyc+Both)) + 
+  geom_line(aes(y=Mito+Glyc)) + 
+  geom_line(aes(y=Mito)) +
+  geom_line(aes(y=zeros)) +
+  scale_fill_manual(values = cols3, labels = names3, breaks=c('Mito', 'Glyc', 'Mix')) +
+  scale_x_continuous(breaks = log2(c(0,0.10,0.25,0.5,1) + 0.10), labels = c('0','0.10','0.25','0.5','1' )) +
+  scale_y_continuous(breaks = c(0,1), labels = c('0','1' )) +
+  ggplot2::labs(y="ATP Frac.", x="Static utilization") +
+  ggplot2::theme_bw() + ggplot2::theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + 
+  theme(text = element_text(size=14, color="black"), axis.text = element_text(size=14, color="black"), legend.text = element_text(size=14, color="black"), legend.position = "none", legend.box = "vertical", plot.margin = margin(t=20), axis.text.x = element_blank(), axis.title.x = element_blank()) +
+  annotate(geom="text", x=-1.54, y=0.5, label="Neurons", color="black", size=5)  #fontface=2
+pZ
+
+
+ggsave(
+  paste0(figPath, "CombModel1.eps"),
+  plot = pZ,
+  width = 3, height = 1.13, dpi = 300)
+
+
+#Astrocytes
+##############
+
+APureGlyc = ATPProdGlycAstr - ATPProdMitoAstr/14.5
+APureGlyc[APureGlyc < 0] = 0
+APureMito = ATPProdMitoAstr - ATPProdGlycAstr*14.5
+APureMito[APureMito < 0] = 0
+AMix = ATPProdGlycAstr + ATPProdMitoAstr - APureGlyc - APureMito
+
+allY = APureGlyc + APureMito + AMix
+APureGlyc = APureGlyc / allY
+APureMito = APureMito / allY
+AMix = AMix / allY
+
+#avoid slopes between two points by repeating all points 10 times and spreading out the X
+APGExp = rep(APureGlyc, each=10)
+APMExp = rep(APureMito, each=10)
+APBExp = rep(AMix, each=10)
+
+
+df = tibble(x=log2(((1:1000) + 5)/1000 + 0.10) , Mito = APMExp, Glyc = APGExp, Both = APBExp, zeros = rep(0,1000))
+
+
+cols3 = c('#c0D0F8','#C0E9B0','#FBF0D0')
+names3 = c("Mit.", "Glyc.", "Both")
+
+pZ = ggplot(df, aes(x=x)) +
+  geom_area(aes(y=Mito+Glyc+Both, fill="Mix")) + 
+  geom_area(aes(y=Mito+Glyc, fill="Glyc")) + 
+  geom_area(aes(y=Mito, fill="Mito")) +
+  geom_line(aes(y=Mito+Glyc+Both)) + 
+  geom_line(aes(y=Mito+Glyc)) + 
+  geom_line(aes(y=Mito)) +
+  geom_line(aes(y=zeros)) +
+  scale_fill_manual(values = cols3, labels = names3, breaks=c('Mito', 'Glyc', 'Mix')) +
+  scale_x_continuous(breaks = log2(c(0,0.10,0.25,0.5,1) + 0.10), labels = c('0','0.10','0.25','0.5','1' )) +
+  scale_y_continuous(breaks = c(0,1), labels = c('0','1' )) +
+  ggplot2::labs(y="ATP Frac.", x="Static utilization") +
+  ggplot2::theme_bw() + ggplot2::theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + 
+  theme(text = element_text(size=14, color="black"), axis.text = element_text(size=14, color="black"), legend.text = element_text(size=14, color="black"), legend.position = "bottom", legend.box = "vertical", plot.margin = margin(t=20)) +
+  guides(fill = guide_legend(order=1, direction="horizontal", title = element_blank())) +
+  annotate(geom="text", x=-1.57, y=0.5, label="Astrocytes", color="black", size=5)  #fontface=2
+pZ
+
+
+ggsave(
+  paste0(figPath, "CombModel2.eps"),
+  plot = pZ,
+  width = 3, height = 2.1, dpi = 300)
+
+
+
 #############################
-# Fig. S2
+# Fig. 4E
 #############################
 
 d1 = readMat("data/simpleModelOutputRedMitMob.mat")$d[,,1] 
@@ -540,7 +663,7 @@ ggsave(
 ################################
 ################################
 # Below are tests for verifying
-# Fig. 2B-D
+# Fig. 4B-D
 ################################
 ################################
 

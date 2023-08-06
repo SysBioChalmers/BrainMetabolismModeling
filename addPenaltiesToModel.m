@@ -1,4 +1,4 @@
-function model = addPenaltiesToModel(model, B, TM, TG, UCyto, UMito, dontPenalize)
+function model = addPenaltiesToModel(model, B, TM, TG, UCyto, UMito, dontPenalize, TMT)
 % addPenaltiesToModel
 %
 % Adds EAMCA maintenance costs to the model
@@ -19,19 +19,24 @@ function model = addPenaltiesToModel(model, B, TM, TG, UCyto, UMito, dontPenaliz
 %
 %   dontPenalize    If true, we add reactions to consume protein pool, but at no cost. Default: false
 %
+%   TMT             Transportation penalty for MT enzymes, - optional, default 0
+%
 % Output:
 %
 %   outModel        The penalized model
 %
 
 
+if nargin < 8
+    TMT = 0;
+end
 if nargin < 7
     dontPenalize = false;
 end
 costOther = B*(1+TG)/UCyto;
 costCyto = B*(1+TG)/UCyto;
 costMito = B*(1+TM)/UMito;
-costMT = B/UMito;
+costMT = B*(1+TMT)/UMito;
 
 rxnsToAdd = {};
 rxnsToAdd.rxns = {'prot_maint_other';'prot_maint_cyto';'prot_maint_mito';'prot_maint_mt'};
