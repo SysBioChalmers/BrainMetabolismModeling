@@ -531,7 +531,7 @@ pZ
 
 
 ggsave(
-  paste0(figPath, "CombModel1.eps"),
+  paste0(figPath, "CombModelTMT1.eps"),
   plot = pZ,
   width = 3, height = 1.13, dpi = 300)
 
@@ -582,7 +582,7 @@ pZ
 
 
 ggsave(
-  paste0(figPath, "CombModel2.eps"),
+  paste0(figPath, "CombModelTMT2.eps"),
   plot = pZ,
   width = 3, height = 2.1, dpi = 300)
 
