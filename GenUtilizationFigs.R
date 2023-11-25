@@ -248,6 +248,16 @@ ATPProdGlycNeur = as.numeric(d$ATPProdGlycNeur)
 ATPProdGlycAstr = as.numeric(d$ATPProdGlycAstr)
 ATPProdMitoNeur = as.numeric(d$ATPProdMitoNeur)
 ATPProdMitoAstr = as.numeric(d$ATPProdMitoAstr)
+#neurLac = (ATPProdMitoNeur/14.5 - ATPProdGlycNeur)/pmax(ATPProdMitoNeur/14.5,ATPProdGlycNeur)  #relative lactate import
+#astrLac = (ATPProdMitoAstr/14.5 - ATPProdGlycAstr)/pmax(ATPProdMitoAstr/14.5,ATPProdGlycAstr)  #relative lactate import
+#relative lactate import. The slice with utilization 0.01 has only 1/100 of the flux
+#that the slice with utilization = 1 has, so we need to compensate for that.
+#We also need to compensate for that astrocytes consume 3% and neurons 17 of the total ATP
+#neurLac = (ATPProdMitoNeur/14.5 - ATPProdGlycNeur)/(1:100)/0.17  
+#astrLac = (ATPProdMitoAstr/14.5 - ATPProdGlycAstr)/(1:100)/0.03  
+neurLac = (ATPProdMitoNeur/14.5 - ATPProdGlycNeur)/(ATPProdMitoNeur + ATPProdGlycNeur)
+astrLac = (ATPProdMitoAstr/14.5 - ATPProdGlycAstr)/(ATPProdMitoAstr + ATPProdGlycAstr)  
+
 
 #Neurons
 ##############
@@ -350,6 +360,64 @@ ggsave(
   paste0(figPath, "CombModel2.eps"),
   plot = pZ,
   width = 3, height = 2.1, dpi = 300)
+
+# Lactate import/export for suppl.
+#################################
+df = tibble(x=log2(((1:1000) + 5)/1000 + 0.10), neurons = rep(neurLac,each=10), astrocytes = rep(astrLac,each=10))
+df2 = df %>% pivot_longer(!x, names_to = "cell_type", values_to = "y")
+df2$cell_type = factor(df2$cell_type, c("neurons","astrocytes"))
+dfLine = tibble(x=c(log2(0.1),log2(1.1)), y=c(0,0))
+pL = ggplot() +
+  geom_line(df2, mapping = aes(x=x, y=y, color=cell_type), size = 1.5) + #, linetype="dashed"
+  geom_line(dfLine, mapping = aes(x=x, y=y), size = 1, color = "#77CC77", linetype="dashed") + 
+  scale_x_continuous(expand = c(0,0), breaks = log2(c(0,0.10,0.25,0.5,1) + 0.10), labels = c('0','0.10','0.25','0.5','1' )) +
+  scale_y_continuous(expand = c(0,0), breaks = c(min(df2$y),0,max(df2$y)), labels = c('Max lactate exp.','No lactate imp./exp.','Max lactate imp.' )) +
+  scale_color_manual(values=c("#444444", "#999999")) +  
+  ggplot2::labs(y="", x="Static utilization") +
+  ggplot2::theme_bw() + ggplot2::theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.title=element_blank()) + 
+  theme(text = element_text(size=14, color="black"), axis.text = element_text(size=14, color="black"), legend.text = element_text(size=14, color="black"), legend.position = "bottom", legend.box = "vertical") +
+  guides(fill = guide_legend(order=1, direction="horizontal", title = element_blank()))
+pL
+
+ggsave(
+  paste0(figPath, "CombModelLac.png"),
+  plot = pL,
+  width = 8, height = 5.5, dpi = 600)
+
+#Now the cumulative plot
+########################
+
+#We ignore the maintenance energies here, since they don't really belong to slices (they do not vary over time)
+#A way to do this is to use the normalized values above (from the pL plot). Each slice should produce the same
+#amount of ATP WHEN ENGAGED, so we cannot just use the steady-state fluxes here, since they are an average over time.
+#The X here is fraction of slices engaged, or fraction of max ATP production capacity
+accumN = cumsum(rev(neurLac))
+accumA = cumsum(rev(astrLac))
+#Now, normalize to the total production capacity of the engaged slices. Since they all produce the same, we just divide
+#by the number of slices.
+accumNNorm = accumN/(1:100)
+accumANorm = accumA/(1:100)
+df = tibble(x=(1:100)/100, neurons = accumNNorm, astrocytes = accumANorm)
+df2 = df %>% pivot_longer(!x, names_to = "cell_type", values_to = "y")
+df2$cell_type = factor(df2$cell_type, c("neurons","astrocytes"))
+dfLine = tibble(x=c(0,1),y=c(0,0))
+pL = ggplot() +
+  geom_line(df2, mapping = aes(x=x, y=y, color=cell_type), size = 1.5) + #, linetype="dashed"
+  geom_line(dfLine, mapping = aes(x=x, y=y), size = 1, color = "#77CC77", linetype="dashed") + 
+  scale_x_continuous(expand = c(0,0)) +
+  scale_y_continuous(expand = c(0,0), breaks =c(-0.6,-0.4,-0.2,0,0.2),limits=c(-0.65,0.25)) +
+  scale_color_manual(values=c("#444444", "#999999")) +  
+#  ggplot2::labs(y=expression("Lactate imp. per ATP (mmol gDW"^-1*"h"^-1*")"), x="ATP production") +
+  ggplot2::labs(y=expression("Lactate imp. per prod. ATP"), x="ATP production") +
+  ggplot2::theme_bw() + ggplot2::theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.title=element_blank()) + 
+  theme(text = element_text(size=14, color="black"), axis.text = element_text(size=14, color="black"), legend.text = element_text(size=14, color="black"), legend.position = "bottom", legend.box = "vertical") +
+  guides(fill = guide_legend(order=1, direction="horizontal", title = element_blank()))
+pL
+
+ggsave(
+  paste0(figPath, "CombModelLacCumulative.png"),
+  plot = pL,
+  width = 3.4, height = 4.5, dpi = 600)
 
 
 #################################
@@ -599,32 +667,24 @@ glycATPGenNeur1 = as.numeric(d1$glycATPGenNeur)
 glycATPGenAstr1 = as.numeric(d1$glycATPGenAstr)
 mitoATPGenNeur1 = as.numeric(d1$mitoATPGenNeur)
 mitoATPGenAstr1 = as.numeric(d1$mitoATPGenAstr)
+lactExpNeur1 = as.numeric(d1$lactateExpNeur)
+lactExpAstr1 = as.numeric(d1$lactateExpAstr)
+glucUptNeur1 = as.numeric(d1$glucoseUptNeur)
+glucUptAstr1 = as.numeric(d1$glucoseUptAstr)
 
 glycATPGenNeur2 = as.numeric(d2$glycATPGenNeur)
 glycATPGenAstr2 = as.numeric(d2$glycATPGenAstr)
 mitoATPGenNeur2 = as.numeric(d2$mitoATPGenNeur)
 mitoATPGenAstr2 = as.numeric(d2$mitoATPGenAstr)
+lactExpNeur2 = as.numeric(d2$lactateExpNeur)
+lactExpAstr2 = as.numeric(d2$lactateExpAstr)
+glucUptNeur2 = as.numeric(d2$glucoseUptNeur)
+glucUptAstr2 = as.numeric(d2$glucoseUptAstr)
 
 sumNeur = glycATPGenNeur1 + mitoATPGenNeur1
 sumAstr = glycATPGenAstr1 + mitoATPGenAstr1
 
-y = c(glycATPGenAstr1/sumAstr, mitoATPGenAstr1/sumAstr, glycATPGenNeur1/sumNeur, mitoATPGenNeur1/sumNeur)
-x = factor(1:4,1:4,c("Astr. Glyc.","Astr. Mit.", "Neur. Glyc.","Neur. Mit."))
-ct = as.factor(c(1,1,2,2))
-df = tibble(x=x,y=y,ct=ct)
-
-p1<-ggplot(data=df, aes(x=x, y=y, fill=ct)) +
-  #  geom_bar(stat="identity", width = 0.8) +
-  geom_bar(stat="identity", color = "NA") +
-  scale_fill_manual(values=c("#AAAAAA", "#444444")) +
-  coord_flip() +
-  labs(x="",y="ATP frac.") +
-  scale_y_continuous(breaks = c(0,1), labels = c('0','1' )) +
-  ggplot2::theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border = element_blank(), axis.ticks.y = element_blank()) +
-  theme(text = element_text(size=14, color="black"), axis.text.x = element_text(size=14, color="black"), 
-        axis.text.y = element_text(size=14, color="black", vjust=0.3), legend.text = element_text(size=14, color="black"), 
-        panel.background = element_blank(), plot.margin = margin(r = 13), legend.position = "none")
-p1
+v
 
 sumNeur = glycATPGenNeur2 + mitoATPGenNeur2
 sumAstr = glycATPGenAstr2 + mitoATPGenAstr2
@@ -657,8 +717,51 @@ ggsave(
   plot = p2,
   width = 3, height = 1.5, dpi = 300)
 
+#Now lactate and glucose fluxes
 
+y = c(glucUptAstr1, lactExpAstr1, glucUptNeur1, -lactExpNeur1)
+x = factor(1:4,1:4,c("Astr. glucose upt.", "Astr. lactate exp.","Neur. glucose upt.", "Neur. lactate upt."))
+ct = as.factor(c(1,1,2,2))
+df = tibble(x=x,y=y,ct=ct)
 
+p3<-ggplot(data=df, aes(x=x, y=y, fill=ct)) +
+  geom_bar(stat="identity", color = "NA") +
+  scale_fill_manual(values=c("#AAAAAA", "#444444")) +
+  coord_flip() +
+  labs(x="",y=expression("Flux (mmol gDW"^-1*"h"^-1*")")) +
+  scale_y_continuous(breaks = c(0,1,2), labels = c('0','1','2'),limits=c(0,2)) +
+  ggplot2::theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border = element_blank(), axis.ticks.y = element_blank()) +
+  theme(text = element_text(size=14, color="black"), axis.text.x = element_text(size=14, color="black"), 
+        axis.text.y = element_text(size=14, color="black", vjust=0.3), legend.text = element_text(size=14, color="black"), 
+        panel.background = element_blank(), plot.margin = margin(r = 13), legend.position = "none")
+p3
+
+y = c(glucUptAstr2, lactExpAstr2, glucUptNeur2, -lactExpNeur2)
+x = factor(1:4,1:4,c("Astr. glucose upt.", "Astr. lactate exp.","Neur. glucose upt.", "Neur. lactate upt."))
+ct = as.factor(c(1,1,2,2))
+df = tibble(x=x,y=y,ct=ct)
+
+p4<-ggplot(data=df, aes(x=x, y=y, fill=ct)) +
+  geom_bar(stat="identity", color = "NA") +
+  scale_fill_manual(values=c("#AAAAAA", "#444444")) +
+  coord_flip() +
+  labs(x="",y=expression("Flux (mmol gDW"^-1*"h"^-1*")")) +
+  scale_y_continuous(breaks = c(0,1,2), labels = c('0','1','2'),limits=c(0,2)) +
+  ggplot2::theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border = element_blank(), axis.ticks.y = element_blank()) +
+  theme(text = element_text(size=14, color="black"), axis.text.x = element_text(size=14, color="black"), 
+        axis.text.y = element_text(size=14, color="black", vjust=0.3), legend.text = element_text(size=14, color="black"), 
+        panel.background = element_blank(), plot.margin = margin(r = 13), legend.position = "none")
+p4
+
+ggsave(
+  paste0(figPath, "Fig S2B_redmitmob_fluxes.svg"),
+  plot = p3,
+  width = 4, height = 1.5, dpi = 300)
+
+ggsave(
+  paste0(figPath, "Fig S2C_transport_fluxes.svg"),
+  plot = p4,
+  width = 4, height = 1.5, dpi = 300)
 
 ################################
 ################################
@@ -819,6 +922,78 @@ pZ
 
 
 
+##########################################
+# Sensitivity analysis transportation cost
+##########################################
 
+
+#Neurons
+##############
+
+TVals = as.numeric(readMat("data/Sens/TVals.mat")$TVals)
+neurMtx = matrix(NA, nrow = length(TVals), ncol = 100)
+astrMtx = matrix(NA, nrow = length(TVals), ncol = 100)
+#the matrix is just fraction of ATP that comes from glycolysis
+for (i in 1:length(TVals)) {
+  print(i)
+  d = readMat(paste0("data/Sens/",i,".mat"))$d[,,1] 
+  ATPProdGlycNeur = as.numeric(d$ATPProdGlycNeur)
+  ATPProdGlycAstr = as.numeric(d$ATPProdGlycAstr)
+  ATPProdMitoNeur = as.numeric(d$ATPProdMitoNeur)
+  ATPProdMitoAstr = as.numeric(d$ATPProdMitoAstr)
+  neurMtx[i,] = (ATPProdMitoNeur/14.5 - ATPProdGlycNeur)/pmax(ATPProdMitoNeur/14.5,ATPProdGlycNeur)  #relative lactate import
+  astrMtx[i,] = (ATPProdMitoAstr/14.5 - ATPProdGlycAstr)/pmax(ATPProdMitoAstr/14.5,ATPProdGlycAstr)  #relative lactate import
+  
+}
+
+logT = log10(TVals)
+
+ycoord = rep(logT,100)
+xcoord = rep((1:100)/100, 1, each=length(logT))
+vals = as.vector(neurMtx)
+
+df = tibble(x = xcoord, y=ycoord, val = vals)
+
+#cols3 = c('#c0D0F8','#C0E9B0','#FBF0D0')
+
+pA = ggplot() +
+  geom_tile(data = df, mapping=aes(x=x,y=y,fill=val, color=val)) +
+  scale_fill_gradient2(low = "#C0E9B0", mid = "#FFFFFF", high = "#C0D0F8", midpoint = 0, breaks = c(-1,0,1), labels = c("Max lactate exp.", "No lactate imp./exp.", "Max lactate imp.")) +
+  scale_color_gradient2(low = "#C0E9B0", mid = "#FFFFFF", high = "#C0D0F8", midpoint = 0, breaks = c(-1,0,1), labels = c("Max lactate exp.", "No lactate imp./exp.", "Max lactate imp.")) +
+  labs(x = "Utilization", y = expression("Log"[10]*"(T)")) +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_x_continuous(expand = c(0,0), breaks = c(0,0.25,0.5,0.75,1), labels = c('0','0.25','0.5','0.75','1' )) +
+  theme(legend.title = element_blank(), panel.grid.major= element_blank(),panel.grid.minor= element_blank(),
+        legend.text=element_text(size=14), axis.text = element_text(color='black', size=14), axis.title = element_text(color='black', size=14),
+        panel.background = element_blank(), axis.line = element_line(size = 0.8, colour = "black"))
+pA
+
+
+ggsave(
+  paste0(figPath, "Transp_sens_neur.png"),
+  plot = pA,
+  width = 6, height = 4, dpi = 600)
+
+vals = as.vector(astrMtx)
+
+df = tibble(x = xcoord, y=ycoord, val = vals)
+
+pB = ggplot() +
+  geom_tile(data = df, mapping=aes(x=x,y=y,fill=val, color=val)) +
+  scale_fill_gradient2(low = "#C0E9B0", mid = "#FFFFFF", high = "#C0D0F8", midpoint = 0, breaks = c(-1,0,1), labels = c("Max lactate exp.", "No lactate imp./exp.", "Max lactate imp.")) +
+  scale_color_gradient2(low = "#C0E9B0", mid = "#FFFFFF", high = "#C0D0F8", midpoint = 0, breaks = c(-1,0,1), labels = c("Max lactate exp.", "No lactate imp./exp.", "Max lactate imp.")) +
+  labs(x = "Utilization", y = expression("Log"[10]*"(T)")) +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_x_continuous(expand = c(0,0), breaks = c(0,0.25,0.5,0.75,1), labels = c('0','0.25','0.5','0.75','1' )) +
+  theme(legend.title = element_blank(), panel.grid.major= element_blank(),panel.grid.minor= element_blank(),
+        legend.text=element_text(size=14), axis.text = element_text(color='black', size=14), axis.title = element_text(color='black', size=14),
+        panel.background = element_blank(), axis.line = element_line(size = 0.8, colour = "black"))
+pB
+
+
+ggsave(
+  paste0(figPath, "Transp_sens_astr.png"),
+  plot = pB,
+  width = 6, height = 4, dpi = 600)
 
 

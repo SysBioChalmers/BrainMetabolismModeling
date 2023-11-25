@@ -53,6 +53,11 @@ neurImpSel = strcmp(mu.rxns, 'MAR08515');
 astrExpSel = strcmp(mu.rxns, 'A_MAR06048');
 astrImpSel = strcmp(mu.rxns, 'A_MAR08515');
 
+neurLactExp = res.x(neurExpSel);
+neurLactImp = res.x(neurImpSel);
+astrLactExp = res.x(astrExpSel);
+astrLactImp = res.x(astrImpSel);
+
 neurGlycSel = strcmp(mu.rxns, 'MAR04394');
 astrGlycSel = strcmp(mu.rxns, 'A_MAR04394');
 neurMitSel = strcmp(mu.rxns, 'MAR04152');
@@ -78,6 +83,10 @@ d.glycATPGenNeur = glycATPConsNeur;
 d.glycATPGenAstr = glycATPConsAstr;
 d.mitoATPGenNeur = mitoATPConsNeur;
 d.mitoATPGenAstr = mitoATPConsAstr;
+d.lactateExpNeur = neurLactExp - neurLactImp;
+d.lactateExpAstr = astrLactExp - astrLactImp;
+d.glucoseUptNeur = glycNeur;
+d.glucoseUptAstr = glycAstr;
 
 save(outFilename, 'd')
 

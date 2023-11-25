@@ -1,4 +1,4 @@
-function totModel = buildFullUtilBrainModel(baseModel, fracN, fracA, TNM, TNG, TAM, TAG, mobUtilN, mobUtilA, TMT)
+function totModel = buildFullUtilBrainModel(baseModel, fracN, fracA, TNM, TNG, TAM, TAG, mobUtilN, mobUtilA, TMT, addExtraATP)
 % buildFullUtilBrainModel
 %
 % Generates a combined model with neurons, astrocytes, and 'the rest of the body' (rob).
@@ -32,6 +32,8 @@ function totModel = buildFullUtilBrainModel(baseModel, fracN, fracA, TNM, TNG, T
 %
 %   TMT             Transportation penalty for MT enzymes, - optional, default 0
 %
+%   addExtraATP     Adds extra ATP to ensure that we don't run out of ATP in slices - optional, default false
+%
 % Output:
 %
 %   outModel        The full model
@@ -39,6 +41,9 @@ function totModel = buildFullUtilBrainModel(baseModel, fracN, fracA, TNM, TNG, T
 
 if nargin < 10
     TMT = 0;
+end
+if nargin < 11
+    addExtraATP = false;
 end
 
 %for debugging
@@ -212,6 +217,59 @@ totModel = addRxns(totModel,rxnsToAdd, 3);
 %6. Constrain the lactate uptake in the Rob to ~25% of the expected glucose uptake (then assuming no lactate uptake)
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 totModel.ub(strcmp(totModel.rxns, 'MAR08515')) = 2*fracRob*0.25;%total glucos supply is 1, 2 is for that 2 lactate corresponds to 1 glucose
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%7. For some simulations, the ATP maintenance costs become higher than the ATP production,
+%   which messes up the simulation. To solve this, we move the maintenance costs to the ROB
+%   model, and add extra ATP there.
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+if addExtraATP
+    for i = 1:100
+        NTag = ['N_' num2str(i) '_'];
+        ATag = ['A_' num2str(i) '_'];
+        rxnNamesN = {[NTag 'prot_maint_other'];[NTag 'prot_maint_cyto'];[NTag 'prot_maint_mito'];[NTag 'prot_maint_mt']};
+        rxnNamesA = {[ATag 'prot_maint_other'];[ATag 'prot_maint_cyto'];[ATag 'prot_maint_mito'];[ATag 'prot_maint_mt']};
+        rxnIndN = find(ismember(totModel.rxns,rxnNamesN));
+        rxnIndA = find(ismember(totModel.rxns,rxnNamesA));
+        
+        %Get indices of metabolites in the S matrix
+        %H2O[c] + ATP[c] => ADP[c] + Pi[c] + H+[c] + X other_prot_pool[c]
+        sliceNCompInd = find(strcmp(totModel.comps, [NTag 'c']));
+        sliceACompInd = find(strcmp(totModel.comps, [ATag 'c']));
+        robCompInd = find(strcmp(totModel.comps, 'c'));
+        metH2OSliceNInd = find(totModel.metComps == sliceNCompInd & strcmp(totModel.metNames, 'H2O'));
+        metH2OSliceAInd = find(totModel.metComps == sliceACompInd & strcmp(totModel.metNames, 'H2O'));
+        metH2ORobInd = find(totModel.metComps == robCompInd & strcmp(totModel.metNames, 'H2O'));
+
+        metATPSliceNInd = find(totModel.metComps == sliceNCompInd & strcmp(totModel.metNames, 'ATP'));
+        metATPSliceAInd = find(totModel.metComps == sliceACompInd & strcmp(totModel.metNames, 'ATP'));
+        metATPRobInd = find(totModel.metComps == robCompInd & strcmp(totModel.metNames, 'ATP'));
+
+        metADPSliceNInd = find(totModel.metComps == sliceNCompInd & strcmp(totModel.metNames, 'ADP'));
+        metADPSliceAInd = find(totModel.metComps == sliceACompInd & strcmp(totModel.metNames, 'ADP'));
+        metADPRobInd = find(totModel.metComps == robCompInd & strcmp(totModel.metNames, 'ADP'));
+
+        metPiSliceNInd = find(totModel.metComps == sliceNCompInd & strcmp(totModel.metNames, 'Pi'));
+        metPiSliceAInd = find(totModel.metComps == sliceACompInd & strcmp(totModel.metNames, 'Pi'));
+        metPiRobInd = find(totModel.metComps == robCompInd & strcmp(totModel.metNames, 'Pi'));
+
+        metHSliceNInd = find(totModel.metComps == sliceNCompInd & strcmp(totModel.metNames, 'H+'));
+        metHSliceAInd = find(totModel.metComps == sliceACompInd & strcmp(totModel.metNames, 'H+'));
+        metHRobInd = find(totModel.metComps == robCompInd & strcmp(totModel.metNames, 'H+'));
+        
+        %now change the prot pool reactions so we consume ATP in Rob instead of in slices
+        robMetInd = [metH2ORobInd;metATPRobInd;metADPRobInd;metPiRobInd;metHRobInd];
+        sliceMetInd = [metH2OSliceNInd;metATPSliceNInd;metADPSliceNInd;metPiSliceNInd;metHSliceNInd];
+        totModel.S(robMetInd,rxnIndN) = totModel.S(sliceMetInd,rxnIndN);
+        totModel.S(sliceMetInd,rxnIndN) = 0;
+        sliceMetInd = [metH2OSliceAInd;metATPSliceAInd;metADPSliceAInd;metPiSliceAInd;metHSliceAInd];
+        totModel.S(robMetInd,rxnIndA) = totModel.S(sliceMetInd,rxnIndA);
+        totModel.S(sliceMetInd,rxnIndA) = 0;
+    end
+    %And, Add some extra ATP to the ROB model
+    %Perhaps not needed?
+end
 
 
 end

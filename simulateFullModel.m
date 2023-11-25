@@ -1,4 +1,4 @@
-function simulateFullModel(baseModel, outFilename, fracN, fracA, TNM, TNG, TAM, TAG, mobUtilN, mobUtilA, TMT)
+function simulateFullModel(baseModel, outFilename, fracN, fracA, TNM, TNG, TAM, TAG, mobUtilN, mobUtilA, TMT, addExtraATP)
 % simulateFullModel
 %
 % Generates a combined model from the params supplied and runs a simulation.
@@ -30,13 +30,15 @@ function simulateFullModel(baseModel, outFilename, fracN, fracA, TNM, TNG, TAM, 
 %
 %   TMT             Transportation penalty for MT enzymes, - optional, default 0
 %
+%   addExtraATP     Adds extra ATP to ensure that we don't run out of ATP in slices
+%
 % Output:
 %
 
 if nargin < 11
     TMT = 0;
 end
-mu = buildFullUtilBrainModel(baseModel, fracN, fracA, TNM, TNG, TAM, TAG, mobUtilN, mobUtilA, TMT);
+mu = buildFullUtilBrainModel(baseModel, fracN, fracA, TNM, TNG, TAM, TAG, mobUtilN, mobUtilA, TMT, addExtraATP);
 
 %glucose + unl oxygen
 mu.ub(strcmp(mu.rxns, 'MAR09034_REV')) = 1; %Supply glucose - oxygen should already be open
