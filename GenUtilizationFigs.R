@@ -397,10 +397,11 @@ accumA = cumsum(rev(astrLac))
 #by the number of slices.
 accumNNorm = accumN/(1:100)
 accumANorm = accumA/(1:100)
-df = tibble(x=(1:100)/100, neurons = accumNNorm, astrocytes = accumANorm)
+#df = tibble(x=(1:100)/100, neur. = accumNNorm, astr. = accumANorm)
+df = tibble(x=1:100, neur. = accumNNorm, astr. = accumANorm)
 df2 = df %>% pivot_longer(!x, names_to = "cell_type", values_to = "y")
-df2$cell_type = factor(df2$cell_type, c("neurons","astrocytes"))
-dfLine = tibble(x=c(0,1),y=c(0,0))
+df2$cell_type = factor(df2$cell_type, c("neur.","astr."))
+dfLine = tibble(x=c(0,100),y=c(0,0))
 pL = ggplot() +
   geom_line(df2, mapping = aes(x=x, y=y, color=cell_type), size = 1.5) + #, linetype="dashed"
   geom_line(dfLine, mapping = aes(x=x, y=y), size = 1, color = "#77CC77", linetype="dashed") + 
@@ -408,16 +409,16 @@ pL = ggplot() +
   scale_y_continuous(expand = c(0,0), breaks =c(-0.6,-0.4,-0.2,0,0.2),limits=c(-0.65,0.25)) +
   scale_color_manual(values=c("#444444", "#999999")) +  
 #  ggplot2::labs(y=expression("Lactate imp. per ATP (mmol gDW"^-1*"h"^-1*")"), x="ATP production") +
-  ggplot2::labs(y=expression("Lactate imp. per prod. ATP"), x="ATP production") +
+  ggplot2::labs(y=expression("Lact. imp. per prod. ATP"), x="ATP production (%)") +
   ggplot2::theme_bw() + ggplot2::theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.title=element_blank()) + 
-  theme(text = element_text(size=14, color="black"), axis.text = element_text(size=14, color="black"), legend.text = element_text(size=14, color="black"), legend.position = "bottom", legend.box = "vertical") +
+  theme(text = element_text(size=14, color="black"), axis.text = element_text(size=14, color="black"), legend.text = element_text(size=14, color="black"), legend.position = "bottom", legend.box = "vertical", plot.margin = margin(r=13)) +
   guides(fill = guide_legend(order=1, direction="horizontal", title = element_blank()))
 pL
 
 ggsave(
   paste0(figPath, "CombModelLacCumulative.png"),
   plot = pL,
-  width = 3.4, height = 4.5, dpi = 600)
+  width = 2.8, height = 3.12, dpi = 600)
 
 
 #################################
