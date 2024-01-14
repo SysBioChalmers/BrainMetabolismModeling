@@ -1,2 +1,2 @@
 # BrainMetabolismModeling
-Modeling of the energy metabolism of the brain
+Code for analysis and figure generation of the article "Brain energy metabolism is optimized to minimize the cost of enzyme synthesis and transport"
